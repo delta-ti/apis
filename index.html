@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Documentação API - Grupo AIZ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="swagger-ui/swagger-ui/dist/swagger-ui.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f7fa;
+    }
+    .sidebar-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #1a354e;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background-color: #0b1f34;
+      color: white;
+      padding: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #1a354e;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar a {
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      padding: 8px 12px;
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: #173955;
+      color: #64b5f6;
+    }
+
+    .sidebar a.active {
+      background-color: #ffffff10;
+      color: #64b5f6;
+    }
+
+    #swagger-ui {
+      margin-left: 260px;
+      padding: 24px;
+      flex-grow: 1;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      #swagger-ui {
+        margin-left: 0;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+   <h2 class="sidebar-title"><i class="bi bi-diagram-3-fill"></i> API AIZ</h2>
+    <a data-tag="Autenticação"><i class="bi bi-shield-lock-fill"></i> Autenticação</a>
+    <a data-tag="Empresas"><i class="bi bi-buildings-fill"></i> Empresas</a>
+    <a data-tag="Arquivos"><i class="bi bi-folder-fill"></i> Arquivos</a>
+    <a data-tag="Perfis"><i class="bi bi-people-fill"></i> Perfis</a>
+    <a data-tag="Permissões"><i class="bi bi-key-fill"></i> Permissões</a>
+    <a data-tag="PerfilPermissao"><i class="bi bi-link-45deg"></i> PerfilPermissão</a>
+    <a data-tag="Agrupamentos"><i class="bi bi-diagram-2-fill"></i> Agrupamentos</a>
+    <a data-tag="UsuarioEmpresa"><i class="bi bi-person-workspace"></i> Usuário ↔ Empresa</a>
+    <a data-tag="UsuarioAgrupamento"><i class="bi bi-people"></i> Usuário ↔ Agrupamento</a>
+    <a data-tag="DesvincularEmpresa"><i class="bi bi-x-circle-fill"></i> Desvincular Empresa</a>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="swagger-ui/swagger-ui/dist/swagger-ui-bundle.js"></script>
+  <script>
+    const ui = SwaggerUIBundle({
+      url: "docs.yaml",
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      docExpansion: 'list',
+      presets: [SwaggerUIBundle.presets.apis],
+      layout: "BaseLayout"
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const scrollToTag = (tagName) => {
+        const id = `operations-tag-${tagName}`;
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          console.warn("Seção não encontrada:", tagName);
+        }
+      };
+
+      const sidebarLinks = document.querySelectorAll(".sidebar a[data-tag]");
+      sidebarLinks.forEach(link => {
+        link.addEventListener("click", () => {
+          const tag = link.getAttribute("data-tag");
+          sidebarLinks.forEach(l => l.classList.remove("active"));
+          link.classList.add("active");
+          setTimeout(() => scrollToTag(tag), 200);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

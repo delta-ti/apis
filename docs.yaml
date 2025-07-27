@@ -1,0 +1,745 @@
+openapi: 3.0.3
+info:
+  title: Supabase CRUD APIs
+  description: Documentação das funções Edge para gerenciamento de usuários, permissões, perfis, empresas e agrupamentos no sistema GAIZ.
+  version: 1.0.0
+servers:
+  - url: https://pbhulouvwqdzkattzckp.supabase.co/functions/v1
+
+# ============================
+# === TAGS ORGANIZADAS ===
+# ============================
+tags:
+  - name: Autenticação
+    description: Endpoints de login, redefinição e criação de usuários
+  - name: Empresas
+    description: Operações relacionadas à entidade Empresa
+  - name: Arquivos
+    description: Operações relacionadas a arquivos e uploads
+  - name: Perfis
+    description: Gerenciamento de perfis de usuário
+  - name: Permissões
+    description: Gerenciamento de permissões do sistema
+  - name: PerfilPermissao
+    description: Vínculos entre perfis e permissões
+  - name: Agrupamentos
+    description: Operações sobre agrupamentos estratégicos
+  - name: UsuarioEmpresa
+    description: Vínculos entre usuários e empresas
+  - name: UsuarioAgrupamento
+    description: Vínculos entre usuários e agrupamentos
+  - name: DesvincularEmpresa
+    description: Remover empresa de um agrupamento
+    
+    
+    
+paths:
+
+  /functions/v1/swift-task:
+    post:
+      tags: [Autenticação]
+      summary: Criar usuário
+      description: Cria um novo usuário no sistema e registra no Supabase Auth e na tabela `usuarios`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - senha
+                - nome
+                - sobrenome
+                - telefone
+                - origem_cadastro_id
+              properties:
+                email:
+                  type: string
+                senha:
+                  type: string
+                nome:
+                  type: string
+                sobrenome:
+                  type: string
+                telefone:
+                  type: string
+                origem_cadastro_id:
+                  type: string
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+        '400':
+          description: Campos obrigatórios ausentes
+        '409':
+          description: Usuário já existe
+        '500':
+          description: Erro interno do servidor
+      security:
+        - bearerAuth: []
+
+  /functions/v1/super-endpoint:
+    put:
+      tags: [Autenticação]
+      summary: Atualizar usuário
+      description: Atualiza os dados de um usuário existente (requer token JWT).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                nome:
+                  type: string
+                sobrenome:
+                  type: string
+                telefone:
+                  type: string
+                perfil_id:
+                  type: string
+      responses:
+        '200':
+          description: Usuário atualizado com sucesso
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+        '500':
+          description: Erro interno
+
+  /functions/v1/dynamic-action:
+    get:
+      tags: [Autenticação]
+      summary: Listar usuários
+      description: Retorna o perfil do usuário autenticado e uma lista dos usuários (RLS).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuários retornados com sucesso
+        '401':
+          description: Token inválido ou ausente
+        '500':
+          description: Erro interno
+
+  /functions/v1/smart-handler:
+    delete:
+      tags: [Autenticação]
+      summary: Deletar usuário
+      description: Remove um usuário autenticado do Supabase Auth e da tabela `usuarios`, com backup.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usuário deletado com sucesso
+        '400':
+          description: Requisição inválida
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+
+
+  /functions/v1/rapid-endpoint:
+    put:
+      tags: [Autenticação]
+      summary: Enviar e-mail de redefinição de senha
+      description: Envia um e-mail com link de redefinição de senha baseado no `origem_cadastro_id` do usuário.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: E-mail enviado com sucesso
+        '400':
+          description: Requisição inválida
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+
+  /functions/v1/dynamic-worker:
+    put:
+      tags: [Autenticação]
+      summary: Alterar senha autenticado
+      description: Usuário autenticado pode trocar sua senha atual, validando com senha antiga.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - senha_atual
+                - nova_senha
+                - confirmar_senha
+              properties:
+                senha_atual:
+                  type: string
+                nova_senha:
+                  type: string
+                confirmar_senha:
+                  type: string
+      responses:
+        '200':
+          description: Senha alterada com sucesso
+        '400':
+          description: Senhas não conferem ou dados faltando
+        '401':
+          description: Autenticação inválida
+        '500':
+          description: Erro interno
+
+  /functions/v1/rapid-api:
+    put:
+      tags: [Autenticação]
+      summary: Receber nova senha via token
+      description: Define uma nova senha utilizando token recebido via e-mail de recuperação.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - novaSenha
+              properties:
+                novaSenha:
+                  type: string
+                  minLength: 6
+      responses:
+        '200':
+          description: Senha redefinida com sucesso
+        '400':
+          description: Token ou senha inválidos
+        '500':
+          description: Erro interno
+
+
+  /functions/v1/hyper-responder:
+    post:
+      tags: [Autenticação]
+      summary: Reenviar e-mail de confirmação
+      description: Reenvia o link de confirmação de e-mail para usuários que ainda não confirmaram.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Link reenviado com sucesso ou e-mail já confirmado
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+
+  /functions/v1/smooth-endpoint:
+    post:
+      tags: [Autenticação]
+      summary: Login
+      description: Realiza login do usuário e retorna o token JWT de acesso.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - senha
+              properties:
+                email:
+                  type: string
+                senha:
+                  type: string
+      responses:
+        '200':
+          description: Login bem-sucedido e token retornado
+        '400':
+          description: Campos obrigatórios ausentes
+        '401':
+          description: Credenciais inválidas
+        '500':
+          description: Erro interno
+
+  /hyper-endpoint:
+    get:
+      tags: [Empresas]
+      summary: Listar ou buscar empresas
+      parameters:
+        - in: query
+          name: empresaId
+          schema:
+            type: string
+        - in: query
+          name: cnpj
+          schema:
+            type: string
+      responses:
+        '200': { description: Empresas listadas ou retornada por ID/CNPJ }
+    post:
+      tags: [Empresas]
+      summary: Criar empresa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [razao_social, cnpj_cpf]
+              properties:
+                razao_social: { type: string }
+                nome_fantasia: { type: string }
+                cnpj_cpf: { type: string }
+                agrupamento_id: { type: string }
+                status: { type: string }
+      responses:
+        '201': { description: Empresa criada com sucesso }
+    put:
+      tags: [Empresas]
+      summary: Atualizar empresa
+      parameters:
+        - in: query
+          name: empresaId
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                razao_social: { type: string }
+                nome_fantasia: { type: string }
+                cnpj_cpf: { type: string }
+                agrupamento_id: { type: string }
+                status: { type: string }
+      responses:
+        '200': { description: Empresa atualizada }
+    delete:
+      tags: [Empresas]
+      summary: Deletar empresa
+      parameters:
+        - in: query
+          name: empresaId
+          schema:
+            type: string
+      responses:
+        '200': { description: Empresa deletada }
+
+  /dynamic-endpoint:
+    get:
+      tags: [Arquivos]
+      summary: Listar arquivos
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: empresa_id
+          schema: { type: string }
+        - in: query
+          name: user_id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: only_active
+          schema: { type: boolean }
+      responses:
+        '200': { description: Arquivos listados }
+    post:
+      tags: [Arquivos]
+      summary: Criar arquivo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [nome, url]
+              properties:
+                nome: { type: string }
+                url: { type: string }
+                empresa_id: { type: string }
+      responses:
+        '201': { description: Arquivo criado }
+    patch:
+      tags: [Arquivos]
+      summary: Atualizar parcialmente arquivo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Arquivo atualizado }
+    delete:
+      tags: [Arquivos]
+      summary: Marcar arquivo como inativo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200': { description: Arquivo marcado como inativo }
+
+  /rapid-service:
+    get:
+      tags: [Perfis]
+      summary: Listar perfis
+      responses:
+        '200': { description: Perfis listados }
+    post:
+      tags: [Perfis]
+      summary: Criar perfil
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [nome]
+              type: object
+              properties:
+                nome: { type: string }
+                parent_id: { type: string }
+      responses:
+        '201': { description: Perfil criado }
+    put:
+      tags: [Perfis]
+      summary: Atualizar perfil
+      parameters:
+        - in: query
+          name: perfilId
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+                parent_id: { type: string }
+      responses:
+        '200': { description: Perfil atualizado }
+    delete:
+      tags: [Perfis]
+      summary: Deletar perfil
+      parameters:
+        - in: query
+          name: perfilId
+          schema:
+            type: string
+      responses:
+        '200': { description: Perfil deletado }
+
+  /hyper-task:
+    get:
+      tags: [Permissões]
+      summary: Listar permissões
+      responses:
+        '200': { description: Permissões listadas }
+    post:
+      tags: [Permissões]
+      summary: Criar permissão
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [nome]
+              type: object
+              properties:
+                nome: { type: string }
+                descricao: { type: string }
+      responses:
+        '201': { description: Permissão criada }
+    put:
+      tags: [Permissões]
+      summary: Atualizar permissão
+      parameters:
+        - in: query
+          name: permissaoId
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+                descricao: { type: string }
+      responses:
+        '200': { description: Permissão atualizada }
+    delete:
+      tags: [Permissões]
+      summary: Deletar permissão
+      parameters:
+        - in: query
+          name: permissaoId
+          schema:
+            type: string
+      responses:
+        '200': { description: Permissão deletada }
+
+  /hyper-api:
+    get:
+      tags: [PerfilPermissao]
+      summary: Listar permissões de perfil
+      parameters:
+        - in: query
+          name: perfilId
+          schema: { type: string }
+        - in: query
+          name: permissaoId
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculos perfil/permissão listados }
+    post:
+      tags: [PerfilPermissao]
+      summary: Vincular permissão ao perfil
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [perfil_id, permissao_id]
+              type: object
+              properties:
+                perfil_id: { type: string }
+                permissao_id: { type: string }
+      responses:
+        '201': { description: Vínculo criado }
+    delete:
+      tags: [PerfilPermissao]
+      summary: Desvincular permissão de perfil
+      parameters:
+        - in: query
+          name: perfilId
+          schema: { type: string }
+        - in: query
+          name: permissaoId
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculo removido }
+
+  /smooth-processor:
+    get:
+      tags: [Agrupamentos]
+      summary: Listar ou buscar agrupamento
+      parameters:
+        - in: query
+          name: agrupamentoId
+          schema: { type: string }
+      responses:
+        '200': { description: Agrupamentos listados ou retornado }
+    post:
+      tags: [Agrupamentos]
+      summary: Criar agrupamento
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [nome, admin_id]
+              type: object
+              properties:
+                nome: { type: string }
+                admin_id: { type: string }
+      responses:
+        '201': { description: Agrupamento criado }
+    put:
+      tags: [Agrupamentos]
+      summary: Atualizar agrupamento
+      parameters:
+        - in: query
+          name: agrupamentoId
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                nome: { type: string }
+      responses:
+        '200': { description: Agrupamento atualizado }
+    delete:
+      tags: [Agrupamentos]
+      summary: Deletar agrupamento
+      parameters:
+        - in: query
+          name: agrupamentoId
+          schema: { type: string }
+      responses:
+        '200': { description: Agrupamento deletado }
+
+  /quick-service:
+    get:
+      tags: [UsuarioEmpresa]
+      summary: Listar vínculos usuário-empresa
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: usuarioId
+          schema: { type: string }
+        - in: query
+          name: empresaId
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculos listados }
+    post:
+      tags: [UsuarioEmpresa]
+      summary: Criar vínculo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [usuario_id, empresa_id]
+              properties:
+                usuario_id: { type: string }
+                empresa_id: { type: string }
+      responses:
+        '201': { description: Vínculo criado }
+    put:
+      tags: [UsuarioEmpresa]
+      summary: Atualizar vínculo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                usuario_id: { type: string }
+                empresa_id: { type: string }
+                status: { type: string }
+      responses:
+        '200': { description: Vínculo atualizado }
+    delete:
+      tags: [UsuarioEmpresa]
+      summary: Deletar vínculo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculo deletado }
+
+  /clever-action:
+    get:
+      tags: [UsuarioAgrupamento]
+      summary: Listar vínculos usuário-agrupamento
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: usuario_id
+          schema: { type: string }
+        - in: query
+          name: agrupamento_id
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculos listados }
+    post:
+      tags: [UsuarioAgrupamento]
+      summary: Criar vínculo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [usuario_id, agrupamento_id, papel]
+              properties:
+                usuario_id: { type: string }
+                agrupamento_id: { type: string }
+                papel: { type: string }
+      responses:
+        '201': { description: Vínculo criado }
+    put:
+      tags: [UsuarioAgrupamento]
+      summary: Atualizar vínculo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                papel: { type: string }
+      responses:
+        '200': { description: Vínculo atualizado }
+    delete:
+      tags: [UsuarioAgrupamento]
+      summary: Deletar vínculo
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200': { description: Vínculo deletado }
+
+  /smooth-handler:
+    put:
+      tags: [DesvincularEmpresa]
+      summary: Remover empresa de agrupamento
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [empresa_id]
+              properties:
+                empresa_id: { type: string }
+      responses:
+        '200': { description: Empresa desvinculada com sucesso }
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
