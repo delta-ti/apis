@@ -23,8 +23,8 @@ document.getElementById("login-form").addEventListener("submit", async function(
     if (data.perfil_nome && data.perfil_nome.toLowerCase() === "admin") {
       // Login autorizado, redireciona ou carrega a página restrita
       localStorage.setItem("access_token", data.access_token);
-      // Redirecione para o painel de admin ou dashboard
-      window.location.href = "index.html";
+    
+      window.location.href = "/index.html"; 
     } else {
       document.getElementById("msg").textContent = "Acesso negado: apenas administradores podem acessar.";
     }
