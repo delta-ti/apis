@@ -24,7 +24,7 @@ document.getElementById("login-form").addEventListener("submit", async function(
       // Login autorizado, redireciona ou carrega a página restrita
       localStorage.setItem("access_token", data.access_token);
     
-      window.location.href = "/index.html"; 
+      window.location.href = "index.html"; 
     } else {
       document.getElementById("msg").textContent = "Acesso negado: apenas administradores podem acessar.";
     }
