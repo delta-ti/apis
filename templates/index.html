@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <title>Documentação API - Grupo AIZ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="swagger-ui/swagger-ui/dist/swagger-ui.css" />
+
+
+  <link rel="stylesheet" href="/swagger-ui/swagger-ui/dist/swagger-ui.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
   <style>
@@ -15,16 +17,15 @@
       background-color: #f5f7fa;
     }
     .sidebar-title {
-    font-size: 20px;
-    margin-bottom: 24px;
-    border-bottom: 1px solid #1a354e;
-    padding-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-
+      font-size: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #1a354e;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
     .sidebar {
       width: 260px;
       min-height: 100vh;
@@ -39,7 +40,6 @@
       display: flex;
       flex-direction: column;
     }
-
     .sidebar h2 {
       font-size: 20px;
       margin-bottom: 24px;
@@ -49,7 +49,6 @@
       align-items: center;
       gap: 10px;
     }
-
     .sidebar a {
       color: #ffffff;
       display: flex;
@@ -62,24 +61,20 @@
       border-radius: 6px;
       transition: background 0.2s, color 0.2s;
     }
-
     .sidebar a:hover {
       background-color: #173955;
       color: #64b5f6;
     }
-
     .sidebar a.active {
       background-color: #ffffff10;
       color: #64b5f6;
     }
-
     #swagger-ui {
       margin-left: 260px;
       padding: 24px;
       flex-grow: 1;
       min-height: 100vh;
     }
-
     @media (max-width: 768px) {
       .sidebar {
         display: none;
@@ -93,7 +88,7 @@
 </head>
 <body>
   <div class="sidebar">
-   <h2 class="sidebar-title"><i class="bi bi-diagram-3-fill"></i> API AIZ</h2>
+    <h2 class="sidebar-title"><i class="bi bi-diagram-3-fill"></i> API AIZ</h2>
     <a data-tag="Autenticação"><i class="bi bi-shield-lock-fill"></i> Autenticação</a>
     <a data-tag="Empresas"><i class="bi bi-buildings-fill"></i> Empresas</a>
     <a data-tag="Arquivos"><i class="bi bi-folder-fill"></i> Arquivos</a>
@@ -108,10 +103,10 @@
 
   <div id="swagger-ui"></div>
 
-  <script src="swagger-ui/swagger-ui/dist/swagger-ui-bundle.js"></script>
+  <script src="/swagger-ui/swagger-ui/dist/swagger-ui-bundle.js"></script>
   <script>
     const ui = SwaggerUIBundle({
-      url: "docs.yaml",
+      url: "/docs.yaml",
       dom_id: '#swagger-ui',
       deepLinking: true,
       docExpansion: 'list',
@@ -140,6 +135,10 @@
         });
       });
     });
+      const token = localStorage.getItem('access_token');
+    if (!token) {
+      window.location.href = "login.html";
+    }
   </script>
 </body>
 </html>
